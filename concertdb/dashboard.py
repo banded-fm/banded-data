@@ -81,7 +81,7 @@ def data_metrics(conn: sqlite3.Connection, today: date | None = None) -> dict:
         f"SELECT v.country, COUNT(*) AS n FROM shows s JOIN venues v ON v.id = s.venue_id WHERE {live}"
         f" GROUP BY v.country ORDER BY n DESC LIMIT 10")]
 
-    # What MusicSceneMap gets: `export --musicbrainz-only` at the default confidence.
+    # What Banded gets: `export --musicbrainz-only` at the default confidence.
     m["opened_for_pairs"] = conn.execute(f"SELECT COUNT(*) FROM ({export.QUERY})",
                                          {"min_conf": 0.4, "known_only": 1}).fetchone()[0]
 
@@ -354,7 +354,7 @@ def run_metrics(conn: sqlite3.Connection) -> dict:
 
 
 def prioritized(conn: sqlite3.Connection, shown: int = PRIORITY_SHOWN, done_shown: int = PRIORITY_DONE_SHOWN) -> dict:
-    """Artists queued at the `prioritize` priority (by hand, or from MusicSceneMap's search
+    """Artists queued at the `prioritize` priority (by hand, or from Banded's search
     misses): the next `shown` still to get their full setlist.fm history, in the order
     setlist.fm will take them (state.due: priority, then due time), and the ones finished last."""
     rows = conn.execute(

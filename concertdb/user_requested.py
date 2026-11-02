@@ -1,17 +1,17 @@
-"""User-requested data from MusicSceneMap, stored like our own crawls.
+"""User-requested data from Banded, stored like our own crawls.
 
-MusicSceneMap fetches concert data from outside sources because a user asked for
+Banded fetches concert data from outside sources because a user asked for
 something, and keeps it in its Supabase table `user_requested_data` (source,
 key, data, version, fetched_at, seq), one row per (source, key); `seq` moves
 forward whenever a row is added or its version changes. Nothing in it is about
 the user. Sources so far:
 
   setlistfm  key = setlist id         the setlist as setlist.fm returned it
-                                      (MusicSceneMap's venue-search function)
+                                      (Banded's venue-search function)
   pollstar   key = Pollstar venue id  { venue, ...Pollstar's events response }:
                                       the venue's id, name, city, state, location
                                       (from Pollstar's venue search) and its
-                                      upcoming events, fetched by MusicSceneMap's
+                                      upcoming events, fetched by Banded's
                                       pollstar-events function for Discover
   pollstar_search  key = a venue or city search  Pollstar's autocomplete
                                       response (pollstar-events' and pollstar-city's
@@ -20,11 +20,11 @@ the user. Sources so far:
                                       one page of Pollstar's events in a city
                                       ({ page, pageSize, totalPages, totalEvents,
                                       fromDate, toDate, events }, each event with
-                                      its full venue), fetched by MusicSceneMap's
+                                      its full venue), fetched by Banded's
                                       pollstar-city function for Discover
 
 Each run reads the rows past the last `seq` it handled (meta
-`msm_requested_last_seq`) through the same read-only login as the search
+`user_requested_last_seq`) through the same read-only login as the search
 misses, and hands each to its source's ingest (INGEST), which uses that
 source's crawl code, so the data is stored exactly as if we had fetched it,
 without spending our requests:
@@ -35,7 +35,7 @@ without spending our requests:
   pollstar   the venue linked like `pollstar-add` (a new one is created and
              queued for our own Pollstar crawl), its events through
              pollstar.parse_events / ingest_event with extra.via
-             "musicscenemap" (where they came from)
+             "banded" (where they came from)
   pollstar_city  the events grouped by venue, each venue linked by its Pollstar
              id (a new one is created with the page's city, state, country and
              coordinates, but not queued for our own crawl: a city's pages
@@ -52,9 +52,9 @@ from . import db, ledger, misses
 from .sources import pollstar, setlistfm
 
 ENV = misses.ENV
-CURSOR_KEY = "msm_requested_last_seq"
+CURSOR_KEY = "user_requested_last_seq"
 FETCH_LIMIT = 5000          # rows per run
-VIA = "musicscenemap"
+VIA = "banded"
 
 
 def fetch_from_postgres(db_url: str, after_seq: int, limit: int = FETCH_LIMIT) -> list[tuple[int, str, dict]]:

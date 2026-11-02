@@ -68,7 +68,7 @@ def test_run_skips_the_step_without_a_login(monkeypatch, capsys, tmp_path):
     monkeypatch.delenv(misses.ENV, raising=False)
     conn, _ = _ledger_with_mb(tmp_path)
     cli._misses_step(conn)
-    assert "skipped (no MSM_MISSES_DB_URL)" in capsys.readouterr().out
+    assert "skipped (no BANDED_MISSES_DB_URL)" in capsys.readouterr().out
 
 
 def test_a_failed_fetch_never_fails_the_run(monkeypatch, capsys, tmp_path):

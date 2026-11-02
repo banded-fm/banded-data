@@ -7,7 +7,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
-from . import (backup, dashboard, db, export, ledger, misses, msm_requested, musicbrainz, review, runs, seed, smoke,
+from . import (backup, dashboard, db, export, ledger, misses, user_requested, musicbrainz, review, runs, seed, smoke,
                state, status)
 from .http import Fetcher
 from .normalize import norm
@@ -174,12 +174,12 @@ def cmd_gemini(args):
 
 
 def _misses_step(conn) -> None:
-    """Prioritize the artists MusicSceneMap users looked for (concertdb/misses.py). Never fails the run."""
+    """Prioritize the artists Banded users looked for (concertdb/misses.py). Never fails the run."""
     url = misses.configured()
     if not url:
-        print(f"== MusicSceneMap search misses skipped (no {misses.ENV})")
+        print(f"== Banded search misses skipped (no {misses.ENV})")
         return
-    print("== MusicSceneMap search misses")
+    print("== Banded search misses")
     try:
         print(runs.record(conn, "misses", lambda: misses.prioritize_misses(
             conn, lambda after: misses.fetch_from_postgres(url, after))))
@@ -187,33 +187,33 @@ def _misses_step(conn) -> None:
         print(f"search misses problem (the run carries on): {type(e).__name__}: {e}")
 
 
-def _msm_requested_step(conn) -> None:
-    """Store MusicSceneMap's user-requested data (concertdb/msm_requested.py). Never fails the run."""
-    url = msm_requested.configured()
+def _user_requested_step(conn) -> None:
+    """Store Banded's user-requested data (concertdb/user_requested.py). Never fails the run."""
+    url = user_requested.configured()
     if not url:
-        print(f"== MusicSceneMap user-requested data skipped (no {msm_requested.ENV})")
+        print(f"== Banded user-requested data skipped (no {user_requested.ENV})")
         return
-    print("== MusicSceneMap user-requested data")
+    print("== Banded user-requested data")
     try:
-        print(runs.record(conn, "msm_requested", lambda: msm_requested.import_requested(
-            conn, lambda after: msm_requested.fetch_from_postgres(url, after))))
+        print(runs.record(conn, "user_requested", lambda: user_requested.import_requested(
+            conn, lambda after: user_requested.fetch_from_postgres(url, after))))
     except Exception as e:      # noqa: BLE001 (recorded as a failed step; the crawl carries on)
-        print(f"MusicSceneMap user-requested data problem (the run carries on): {type(e).__name__}: {e}")
+        print(f"Banded user-requested data problem (the run carries on): {type(e).__name__}: {e}")
 
 
-def cmd_msm_requested(args):
-    url = msm_requested.configured()
+def cmd_user_requested(args):
+    url = user_requested.configured()
     if not url:
-        sys.exit(f"set {msm_requested.ENV} (a read-only login for MusicSceneMap's Supabase)")
+        sys.exit(f"set {user_requested.ENV} (a read-only login for Banded's Supabase)")
     conn = _conn(args)
-    print(runs.record(conn, "msm_requested", lambda: msm_requested.import_requested(
-        conn, lambda after: msm_requested.fetch_from_postgres(url, after))))
+    print(runs.record(conn, "user_requested", lambda: user_requested.import_requested(
+        conn, lambda after: user_requested.fetch_from_postgres(url, after))))
 
 
 def cmd_misses(args):
     url = misses.configured()
     if not url:
-        sys.exit(f"set {misses.ENV} (a read-only login for MusicSceneMap's search_misses)")
+        sys.exit(f"set {misses.ENV} (a read-only login for Banded's search_misses)")
     conn = _conn(args)
     print(runs.record(conn, "misses", lambda: misses.prioritize_misses(
         conn, lambda after: misses.fetch_from_postgres(url, after), max_per_run=args.max)))
@@ -227,7 +227,7 @@ def cmd_run(args):
     """
     conn = _conn(args)
     _misses_step(conn)     # first, so the artists it prioritizes are crawled tonight
-    _msm_requested_step(conn)  # data MusicSceneMap already fetched (setlist.fm, Pollstar): no requests of ours
+    _user_requested_step(conn)  # data Banded already fetched (setlist.fm, Pollstar): no requests of ours
     print("== capture (schema.org pages)")
     print(runs.record(conn, "capture", lambda: jsonld.capture(conn, Fetcher(_data_dir(args), min_interval=1.0))))
     if os.environ.get("SETLISTFM_API_KEY"):
@@ -375,9 +375,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("init", help="create the ledger").set_defaults(fn=cmd_init)
 
-    s = sub.add_parser("seed", help="import artists from MusicSceneMap's graph.db(.gz)")
+    s = sub.add_parser("seed", help="import artists from Banded's graph.db(.gz)")
     s.add_argument("--graph", default=seed.GRAPH_URL,
-                   help="path or URL to graph.db(.gz); default: MusicSceneMap's on GitHub")
+                   help="path or URL to graph.db(.gz); default: Banded's on GitHub")
     s.set_defaults(fn=cmd_seed, locked="crawl")
 
     s = sub.add_parser("prioritize", help="crawl these artists first (names or MBIDs)")
@@ -467,14 +467,14 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--all", action="store_true", help="every case, not just the default two (costs more)")
     s.set_defaults(fn=cmd_gemini_eval)
 
-    s = sub.add_parser("misses", help="prioritize the artists MusicSceneMap users looked for and didn't find"
+    s = sub.add_parser("misses", help="prioritize the artists Banded users looked for and didn't find"
                        f" (also the first step of `run`; needs ${misses.ENV})")
     s.add_argument("--max", type=int, default=misses.MAX_PER_RUN, help="new artists this run")
     s.set_defaults(fn=cmd_misses, locked="crawl")
 
-    s = sub.add_parser("msm-requested", help="store the data MusicSceneMap fetched because its users asked"
-                       f" (setlist.fm setlists, Pollstar events; also a step of `run`; needs ${msm_requested.ENV})")
-    s.set_defaults(fn=cmd_msm_requested, locked="crawl")
+    s = sub.add_parser("user-requested", help="store the data Banded fetched because its users asked"
+                       f" (setlist.fm setlists, Pollstar events; also a step of `run`; needs ${user_requested.ENV})")
+    s.set_defaults(fn=cmd_user_requested, locked="crawl")
 
     s = sub.add_parser("run", help="one scheduled cycle: search misses, watched pages, setlist.fm, Pollstar,"
                        " backup")
@@ -495,7 +495,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--no-upload", action="store_true", help="don't upload it to R2 (dashboards/index.html)")
     s.set_defaults(fn=cmd_dashboard)
 
-    s = sub.add_parser("export", help="write opened_for edges for MusicSceneMap")
+    s = sub.add_parser("export", help="write opened_for edges for Banded")
     s.add_argument("--out", default="data/export/opened_for.csv")
     s.add_argument("--min-conf", type=float, default=0.4)
     s.add_argument("--musicbrainz-only", action="store_true",

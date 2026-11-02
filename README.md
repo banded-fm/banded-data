@@ -1,7 +1,7 @@
-# concert-database
+# banded-data
 
 A ledger of concert bills: who played which show, and who opened for whom.
-It feeds `opened_for` edges into [MusicSceneMap](https://github.com/rahuljaisimha/MusicSceneMap),
+It feeds `opened_for` edges into [Banded](https://github.com/rahuljaisimha/banded),
 where they connect bands that share members or scenes (Flat Worms opening for
 Iguana Death Cult at Zebulon links them to Osees through Flat Worms' bassist).
 
@@ -26,13 +26,13 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how it works and
 ## Setup
 
 ```bash
-git clone https://github.com/rahuljaisimha/concert-database && cd concert-database
+git clone https://github.com/rahuljaisimha/banded-data && cd banded-data
 python3 -m venv .venv
 .venv/bin/pip install -e '.[r2,dev]'
 cp .env.example .env        # add your setlist.fm key and R2 credentials
 set -a; . ./.env; set +a
 
-# Load every artist from MusicSceneMap's graph (~76k, a few seconds;
+# Load every artist from Banded's graph (~76k, a few seconds;
 # downloads graph.db.gz from GitHub, or pass --graph <path>). A one-time seed:
 # nothing reads the graph afterwards.
 .venv/bin/concertdb seed
@@ -44,12 +44,12 @@ set -a; . ./.env; set +a
 # Crawl the artists you care about first
 .venv/bin/concertdb prioritize "Osees" "Flat Worms" "Ty Segall"
 
-# ...and the ones MusicSceneMap users looked for and didn't find (also the first
-# step of every `run`; needs MSM_MISSES_DB_URL and: .venv/bin/pip install -e '.[misses]')
+# ...and the ones Banded users looked for and didn't find (also the first
+# step of every `run`; needs BANDED_MISSES_DB_URL and: .venv/bin/pip install -e '.[misses]')
 .venv/bin/concertdb misses
-# store the data MusicSceneMap fetched because its users asked: setlist.fm setlists,
+# store the data Banded fetched because its users asked: setlist.fm setlists,
 # Pollstar events (also a step of every `run`)
-.venv/bin/concertdb msm-requested
+.venv/bin/concertdb user-requested
 ```
 
 ## MusicBrainz data
@@ -115,7 +115,7 @@ concertdb status                      # coverage and progress
 concertdb dashboard                   # data/dashboard.html (also written after every scheduled step)
 concertdb shows "Flat Worms"          # what we know about an artist
 deploy/review.sh                      # flagged act names from `gemini`: list, then keep / rename / mbid / delete each
-concertdb export --musicbrainz-only   # data/export/opened_for.csv for MusicSceneMap
+concertdb export --musicbrainz-only   # data/export/opened_for.csv for Banded
 ```
 
 On the always-on machine, three daily scheduled jobs run side by side and
@@ -153,7 +153,7 @@ small Worker behind Cloudflare Access serves to your phone (docs/HOSTING.md,
 - **The data**: concerts (past, upcoming, cancelled), artists with concerts
   and how many are matched to MusicBrainz, acts per concert (0 / 1 / 2 / 3 /
   4+), concerts with 2+ acts, opened-for pairs (what `export
-  --musicbrainz-only` gives MusicSceneMap), venues, cities and countries,
+  --musicbrainz-only` gives Banded), venues, cities and countries,
   concerts by year, new concerts per day, top countries, what each source
   contributes, flagged act names to review (each with its shows, the page it
   came from, and the `deploy/review.sh` command for each outcome). Headline numbers show the change

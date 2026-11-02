@@ -52,7 +52,7 @@ CREATE TABLE names (
 ) WITHOUT ROWID;
 CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT);
 """
-UA = {"User-Agent": "concert-database/0.1 (+https://github.com/rahuljaisimha/concert-database)"}
+UA = {"User-Agent": "banded-data/0.1 (+https://github.com/rahuljaisimha/banded-data)"}
 
 
 def path_for(ledger_path) -> Path:

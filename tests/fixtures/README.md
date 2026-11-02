@@ -13,9 +13,9 @@ add a test.
   Iguana Death Cult / Flat Worms show at Zebulon, 2026-09-17.
 - `pollstar_autocomplete_zebulon.json`, `pollstar_events_zebulon.json` — Pollstar
   autocomplete and venue-events responses, in the shape documented in
-  MusicSceneMap's `src/api/pollstar.ts`.
+  Banded's `src/api/pollstar.ts`.
 - `pollstar_city_page.json` — one page of Pollstar's events in a city (Berlin),
-  as MusicSceneMap's pollstar-city function stores it: two venues (one with a
+  as Banded's pollstar-city function stores it: two venues (one with a
   mailing address listed before its physical one, one listed again without
   addresses) and an event without a venue. Hand-written in the shape of a real
   response seen on 2026-10-29, with the fields we don't read trimmed.

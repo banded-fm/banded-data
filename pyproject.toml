@@ -1,7 +1,7 @@
 [project]
 name = "concertdb"
 version = "0.1.0"
-description = "Ledger of concert bills (who opened for whom) for MusicSceneMap"
+description = "Ledger of concert bills (who opened for whom) for Banded"
 requires-python = ">=3.10"
 dependencies = ["requests>=2.28", "beautifulsoup4>=4.11"]
 

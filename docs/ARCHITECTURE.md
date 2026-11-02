@@ -24,7 +24,7 @@ mb.*      data/musicbrainz.sqlite, attached: every MusicBrainz artist and its
 ### Matching names
 
 setlist.fm sends MusicBrainz IDs; Pollstar, Gemini and pages send only names.
-Names are matched against MusicBrainz itself, not the MusicSceneMap graph:
+Names are matched against MusicBrainz itself, not the Banded graph:
 the graph is only the one-time seed of the artist list (`concertdb seed`), and
 it is built from this ledger's export, so matching against it would be
 circular.
@@ -91,8 +91,8 @@ Otherwise roles stay unknown (the show still counts as "played together").
   lowest priority, so every artist gets recent coverage before any artist's
   old shows are fetched; the deep pass then continues from the saved page
   until the history is complete. Artists you `prioritize` skip the cap and
-  get their full history at once, and so do the artists MusicSceneMap users
-  looked for and didn't find (see "Search misses from MusicSceneMap").
+  get their full history at once, and so do the artists Banded users
+  looked for and didn't find (see "Search misses from Banded").
 - Later visits read newest-first and stop at the first page with nothing new.
 - Recheck intervals double when nothing changed (setlist.fm 14 → 180 days,
   pages 1 → 7 days, or 365 once every event on a page is past) and reset when
@@ -174,17 +174,17 @@ headline numbers in `metric_snapshots` for trends and 24 h / 7 day deltas.
 embedded as JSON; the page draws its own charts (inline SVG, no libraries).
 A dashboard error is printed but never fails a run.
 
-## Search misses from MusicSceneMap (`concertdb/misses.py`)
+## Search misses from Banded (`concertdb/misses.py`)
 
-MusicSceneMap's graph is built from the artists with concerts here, so an
-artist its users look for and can't find gets in by being crawled. MusicSceneMap
+Banded's graph is built from the artists with concerts here, so an
+artist its users look for and can't find gets in by being crawled. Banded
 logs each such search in its Supabase table `search_misses` (`id, query,
 source, created_at`): the MusicBrainz ID when the user picked the artist from
 its dropdown's MusicBrainz results, else the typed name.
 
 The first step of every `run` (or `concertdb misses`) reads the misses logged
-since the last run with `MSM_MISSES_DB_URL`, a Postgres login that can only
-read that table (MusicSceneMap's migration 007), and:
+since the last run with `BANDED_MISSES_DB_URL`, a Postgres login that can only
+read that table (Banded's migration 007), and:
 
 - resolves each query to a MusicBrainz ID: an MBID as is (if MusicBrainz knows
   it); a name through every artist's names and aliases in
@@ -196,35 +196,35 @@ read that table (MusicSceneMap's migration 007), and:
   most of the day's 1,400 requests; later misses wait for the next run. Its
   position in the table is `meta.misses_last_id`.
 
-Nothing is written back to MusicSceneMap. A failure (Supabase unreachable) is
+Nothing is written back to Banded. A failure (Supabase unreachable) is
 recorded as a failed `misses` step and the run carries on.
 
-## User-requested data from MusicSceneMap (`concertdb/msm_requested.py`)
+## User-requested data from Banded (`concertdb/user_requested.py`)
 
-MusicSceneMap fetches concert data from outside sources because a user asked
+Banded fetches concert data from outside sources because a user asked
 for something, and keeps it in its Supabase table `user_requested_data`
-(`source, key, data, version, fetched_at, seq`; MusicSceneMap migration 009),
+(`source, key, data, version, fetched_at, seq`; Banded migration 009),
 one row per (source, key); `seq` moves forward when a row is added or its
 version changes. Nothing in it is about the user. Sources so far:
 
-- `setlistfm` (key: setlist id): every setlist MusicSceneMap's venue-search
+- `setlistfm` (key: setlist id): every setlist Banded's venue-search
   function fetches (an artist's setlists in a city, then each venue's), as
   setlist.fm returned it.
 - `pollstar` (key: Pollstar venue id): a venue (id, name, city, state,
   location, from Pollstar's venue search) and Pollstar's response for its
-  upcoming events, fetched by MusicSceneMap's pollstar-events function for its
+  upcoming events, fetched by Banded's pollstar-events function for its
   Discover page (Pollstar is asked server-side, at most once a day per venue,
   and every visitor is served from the cache).
 - `pollstar_city` (key: `<city id>:<page>` or `<city id>:<from>:<to>:<page>`):
   one page (up to 100 events) of Pollstar's events in a city between two dates,
   each event with its full venue (address, city, country, coordinates),
-  fetched by MusicSceneMap's pollstar-city function, which replaced
+  fetched by Banded's pollstar-city function, which replaced
   pollstar-events for Discover's concert search (same once-a-day cache).
 - `pollstar_search` (key: a venue or city search): those functions' cache of
   Pollstar's autocomplete answers; skipped here.
 
-The second step of every `run` (or `concertdb msm-requested`) reads the rows
-past `meta.msm_requested_last_seq` (at most 5,000) with the same login as the
+The second step of every `run` (or `concertdb user-requested`) reads the rows
+past `meta.user_requested_last_seq` (at most 5,000) with the same login as the
 misses and hands each to its source's ingest (`INGEST`), which uses that
 source's crawl code, so it's stored as if we had fetched it, without spending
 our requests:
@@ -234,17 +234,17 @@ our requests:
   venue queued for a venue crawl); unchanged setlists are skipped.
 - `pollstar`: the venue linked like `pollstar-add` (a new one is created and
   queued for our own Pollstar crawl), its events through
-  `pollstar.parse_events` / `ingest_event` with `extra.via = "musicscenemap"`
+  `pollstar.parse_events` / `ingest_event` with `extra.via = "banded"`
   (where they came from).
 - `pollstar_city`: the events grouped by venue; each venue is found by its
   Pollstar id, or created with the page's city, state, country and coordinates
   (taken from its physical address) and linked, but not queued for our own
-  Pollstar crawl, since the city pages MusicSceneMap's users ask for already
+  Pollstar crawl, since the city pages Banded's users ask for already
   cover it. Then its events are stored like `pollstar`. Events without a venue
   are skipped (counted).
 
 A row from a source without an ingest, or an unreadable one, is skipped; a
-failure is recorded as a failed `msm_requested` step and the run carries on.
+failure is recorded as a failed `user_requested` step and the run carries on.
 A new source: an ingest function in `INGEST`.
 
 ## Moving to Postgres later
@@ -258,7 +258,7 @@ The raw archive lives outside the database, which keeps the database small.
 ## Pollstar (`concertdb/sources/pollstar.py`)
 
 Pollstar only returns events from today onward, so its bills are lost unless
-saved before the show. MusicSceneMap queries it only when someone asks for
+saved before the show. Banded queries it only when someone asks for
 concert recommendations; this crawler queries every venue the ledger knows
 about, on a schedule, with tight limits:
 
@@ -292,7 +292,7 @@ about, on a schedule, with tight limits:
 ## Gemini (`concertdb/sources/gemini.py`)
 
 Fills in openers for shows already in the ledger: past, non-festival shows with
-an act from the MusicSceneMap graph and at most `GEMINI_MAX_ACTS` acts listed
+an act from the Banded graph and at most `GEMINI_MAX_ACTS` acts listed
 (default 1). Shows by artists you prioritized (`concertdb prioritize`) come
 first, then the most recent shows (pages about them are easiest to find).
 
@@ -464,6 +464,6 @@ tour offline from captured search answers and the promoter's tour page.
    term; a second model to confirm roles on the fetched pages, cached by
    (page hash, prompt version), with a hard monthly $ cap from `usage`.
 5. **Bandsintown** past events, if an `app_id` is granted.
-6. **MusicSceneMap import**: load `opened_for.csv` into the graph build. The
-   ledger's saved Pollstar events could also serve MusicSceneMap's concert
+6. **Banded import**: load `opened_for.csv` into the graph build. The
+   ledger's saved Pollstar events could also serve Banded's concert
    recommendations, so it calls Pollstar less.
