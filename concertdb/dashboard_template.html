@@ -317,7 +317,7 @@ const DATA = /*DATA*/null;
   tile(tiles, "Concerts", d.concerts, `${fmt(d.past)} past · ${fmt(d.upcoming)} upcoming · ${fmt(d.cancelled)} cancelled not counted`, "concerts", "hero");
   tile(tiles, "Artists with concerts", d.artists_with_concerts, `${pct(d.artists_with_concerts_mb, d.artists_with_concerts)} matched to MusicBrainz`, "artists_with_concerts");
   tile(tiles, "Concerts with 2+ acts", d.concerts_2plus, `${pct(d.concerts_2plus, d.concerts)} of concerts`, "concerts_2plus");
-  tile(tiles, "Opened-for pairs", d.opened_for_pairs, "what MusicSceneMap gets (MusicBrainz acts, conf ≥ 0.4)", "opened_for_pairs");
+  tile(tiles, "Opened-for pairs", d.opened_for_pairs, "what Banded gets (MusicBrainz acts, conf ≥ 0.4)", "opened_for_pairs");
   tile(tiles, "Venues", d.venues_with_concerts, `${fmt(d.cities)} cities · ${fmt(d.countries)} countries`, "venues_with_concerts");
   tile(tiles, "Upcoming concerts", d.upcoming, null, "upcoming");
   tile(tiles, "Added in the last 7 days", d.added_7d, "new concerts in the ledger");
@@ -455,7 +455,7 @@ const DATA = /*DATA*/null;
         li.append(`${s.date} · ${[s.venue, s.city, s.country].filter(Boolean).join(", ")} · ${s.role}${bill} `);
         if (s.url) el("a", {href: s.url, target: "_blank", rel: "noopener noreferrer"}, li, "page");
         if (s.quote) { li.append(" "); el("q", {}, li, s.quote.length > 160 ? s.quote.slice(0, 160) + "…" : s.quote); } });
-      const cmds = el("div", {class: "cmds"}, it), n = q(x.name), base = "~/concert-database/deploy/review.sh ";
+      const cmds = el("div", {class: "cmds"}, it), n = q(x.name), base = "~/banded-data/deploy/review.sh ";
       [["keep", "name is right", `keep ${n}`], ["rename", "fix the name", `rename ${n} ${q(x.suggestion || "NEW NAME")}`],
        ["mbid", "it's this MusicBrainz artist", `mbid ${n} MBID`], ["delete", "not an act", `delete ${n}`]]
         .forEach(([_, what, cmd]) => { const code = el("code", {class: "cmd"}, cmds);
@@ -582,9 +582,9 @@ const DATA = /*DATA*/null;
    ["Backup size", bk.bytes ? compact(bk.bytes) + "B" : "–"], ["Uploaded to R2", bk.uploaded == null ? "–" : bk.uploaded ? "yes" : "no"]]
     .forEach(([k, v]) => { el("dt", {}, kv, k); el("dd", {}, kv, v); });
 
-  // ---------- prioritized artists (concertdb prioritize / MusicSceneMap search misses)
+  // ---------- prioritized artists (concertdb prioritize / Banded search misses)
   const pr = r.prioritized;
-  c = card(app, "Prioritized artists", `Crawled before everything else on setlist.fm, full history at once: artists you prioritized and ones MusicSceneMap users looked for and didn't find. ${fmt(pr.waiting)} waiting · ${fmt(pr.done)} done.`);
+  c = card(app, "Prioritized artists", `Crawled before everything else on setlist.fm, full history at once: artists you prioritized and ones Banded users looked for and didn't find. ${fmt(pr.waiting)} waiting · ${fmt(pr.done)} done.`);
   c.id = "prioritized"; c.style.marginTop = "12px";
   if (pr.next.length) {
     const det = table(c, [{label: "#", n: 1, f: x => fmt(x.pos)},

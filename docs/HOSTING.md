@@ -72,26 +72,26 @@ Windows Task Scheduler.
    much slower for SQLite):
    ```bash
    sudo apt update && sudo apt install -y python3-venv git
-   cd ~ && git clone https://github.com/rahuljaisimha/concert-database && cd concert-database
+   cd ~ && git clone https://github.com/rahuljaisimha/banded-data && cd banded-data
    python3 -m venv .venv && .venv/bin/pip install -e '.[r2]'
    cp .env.example .env && chmod 600 .env && nano .env    # paste the secrets
    ```
 3. Load the artists and test one cycle by hand:
    ```bash
-   .venv/bin/concertdb seed          # downloads MusicSceneMap's graph.db.gz (one time)
+   .venv/bin/concertdb seed          # downloads Banded's graph.db.gz (one time)
    .venv/bin/concertdb mb-load       # MusicBrainz names for matching (~1.5 min; README "MusicBrainz data")
    .venv/bin/concertdb prioritize "Osees" "Flat Worms"
    deploy/run.sh && tail -30 data/run.log
    ```
-4. In normal PowerShell, from the repo folder (`\\wsl$\Ubuntu\home\<you>\concert-database`):
+4. In normal PowerShell, from the repo folder (`\\wsl$\Ubuntu\home\<you>\banded-data`):
    `.\deploy\windows-task.ps1 -Distro Ubuntu` (the distribution's name from
    `wsl -l -v`). It registers two daily 4 am tasks that also run when the PC
-   comes back after missing 4 am: `concert-database` (`deploy/run.sh`, about
-   an hour, log in `data/run.log`) and `concert-database-pollstar`
+   comes back after missing 4 am: `banded-data` (`deploy/run.sh`, about
+   an hour, log in `data/run.log`) and `banded-data-pollstar`
    (`deploy/run-pollstar.sh`, Pollstar at ~1 request/s for several hours, log
    in `data/pollstar.log`). They run side by side; see "Concurrency" in
    docs/ARCHITECTURE.md.
-   A third task, `concert-database-gemini`, starts at 1 am (`deploy/run-gemini.sh`,
+   A third task, `banded-data-gemini`, starts at 1 am (`deploy/run-gemini.sh`,
    log in `data/gemini.log`; it exits quickly when `GEMINI_API_KEY` isn't set,
    or none of `CONTEXT_DEV_API_KEY`, `SEARXNG_URL`, `FIRECRAWL_API_KEY` is). For the free search,
    run `deploy/searxng.sh install` once and set `SEARXNG_URL` in `.env`; the
@@ -131,7 +131,7 @@ Add a lifecycle rule so the raw archive doesn't grow past the free 10 GB:
 bucket → Settings → Object lifecycle rules → Add rule, prefix `raw/`, delete
 objects 30 days after upload. Leave `snapshots/` out of it: the backup itself
 keeps 7 daily and 8 weekly snapshots, and a 30-day rule would delete the
-older weekly ones. If MusicSceneMap later needs a public
+older weekly ones. If Banded later needs a public
 file (e.g. the exported `opened_for` edges), publish it to the existing public
 graph bucket instead.
 

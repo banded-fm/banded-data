@@ -1,5 +1,5 @@
 [Unit]
-Description=Run the concert-database Pollstar capture once a day
+Description=Run the banded-data Pollstar capture once a day
 
 [Timer]
 OnCalendar=*-*-* 04:00

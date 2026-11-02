@@ -1,5 +1,5 @@
 [Unit]
-Description=Run the concert-database Gemini opener search once a day
+Description=Run the banded-data Gemini opener search once a day
 
 [Timer]
 # Soon after the free-tier quota resets at midnight Pacific, whatever the

@@ -6,14 +6,14 @@
 #   systemctl --user daemon-reload
 #   systemctl --user enable --now concertdb-pollstar.timer
 [Unit]
-Description=concert-database Pollstar capture
+Description=banded-data Pollstar capture
 Wants=network-online.target
 After=network-online.target
 
 [Service]
 Type=oneshot
-WorkingDirectory=%h/concert-database
-EnvironmentFile=%h/concert-database/.env
-ExecStart=%h/concert-database/.venv/bin/concertdb pollstar
+WorkingDirectory=%h/banded-data
+EnvironmentFile=%h/banded-data/.env
+ExecStart=%h/banded-data/.venv/bin/concertdb pollstar
 Nice=10
 TimeoutStartSec=23h

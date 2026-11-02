@@ -2,7 +2,7 @@
 
 Pollstar's public JSON only returns events from today onward (past dates are
 subscription-gated), so the only way to keep these bills is to store them here
-before the show. Endpoints are the ones MusicSceneMap uses (src/api/pollstar.ts):
+before the show. Endpoints are the ones Banded uses (src/api/pollstar.ts):
 
   Autocomplete  https://autocomplete.pollstar.com/global/All/100/{query}
   Events        https://www.pollstar.com/api/companies/{venueId}/events?...

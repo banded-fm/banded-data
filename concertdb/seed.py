@@ -1,4 +1,4 @@
-"""The initial artist list, from MusicSceneMap's graph.db(.gz): a one-time input.
+"""The initial artist list, from Banded's graph.db(.gz): a one-time input.
 
 Every person/group node becomes an artist (in_graph = 1, kept only as a record
 of where it came from) and a setlist.fm unit of work. Groups are crawled before
@@ -36,7 +36,7 @@ def _open_graph(path: Path) -> tuple[sqlite3.Connection, Path | None]:
     return sqlite3.connect(str(tmp)), tmp
 
 
-GRAPH_URL = "https://raw.githubusercontent.com/rahuljaisimha/MusicSceneMap/main/public/graph.db.gz"
+GRAPH_URL = "https://raw.githubusercontent.com/rahuljaisimha/banded/main/public/graph.db.gz"
 
 
 def _download(url: str) -> Path:

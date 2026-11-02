@@ -1,13 +1,13 @@
-"""Crawl the artists MusicSceneMap users look for and don't find.
+"""Crawl the artists Banded users look for and don't find.
 
-MusicSceneMap logs a "search miss" (Supabase table `search_misses`: id, query,
+Banded logs a "search miss" (Supabase table `search_misses`: id, query,
 source, created_at) when someone looks for an artist its graph doesn't have: a
 MusicBrainz ID when they picked the artist from the dropdown's MusicBrainz
 results, else the name they typed. Its graph is built from the artists with
 concerts here, so the way to get a missing artist into it is to crawl that
 artist's concerts.
 
-Each run reads the misses logged since the last one (MSM_MISSES_DB_URL, a
+Each run reads the misses logged since the last one (BANDED_MISSES_DB_URL, a
 read-only Postgres login that can only SELECT from search_misses), resolves each
 to a MusicBrainz ID, and moves that artist to the front of the setlist.fm queue
 (seed.USER_PRIORITY, the same as `concertdb prioritize`):
@@ -22,7 +22,7 @@ to a MusicBrainz ID, and moves that artist to the front of the setlist.fm queue
 At most MAX_PER_RUN new artists a run, to keep setlist.fm's daily requests for
 the rest of the queue; misses past the cap wait for the next run (the position
 in the table, meta `misses_last_id`, only moves past what was handled). Data
-flows one way: nothing is written back to MusicSceneMap.
+flows one way: nothing is written back to Banded.
 """
 
 import os
@@ -34,7 +34,7 @@ from . import db, ledger, seed, state
 from .normalize import norm
 from .sources import setlistfm
 
-ENV = "MSM_MISSES_DB_URL"
+ENV = "BANDED_MISSES_DB_URL"
 CURSOR_KEY = "misses_last_id"
 MAX_PER_RUN = 25
 FETCH_LIMIT = 2000          # misses read per run (they are tiny)

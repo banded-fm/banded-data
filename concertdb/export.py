@@ -1,4 +1,4 @@
-"""Derived output for MusicSceneMap: opened_for edges (opener → headliner)."""
+"""Derived output for Banded: opened_for edges (opener → headliner)."""
 
 import csv
 import sqlite3

@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 A long-running crawler that builds a ledger of concert bills (who opened for
-whom) for MusicSceneMap. Python 3.10+, SQLite, no web framework.
+whom) for Banded. Python 3.10+, SQLite, no web framework.
 
 Read README.md for usage and docs/ARCHITECTURE.md for the data model, the
 opener inference rules, and how refetching is avoided. Keep both accurate when

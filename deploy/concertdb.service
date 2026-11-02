@@ -8,14 +8,14 @@
 #   systemctl --user enable --now concertdb.timer
 #   loginctl enable-linger "$USER"     # keep user timers running when logged out
 [Unit]
-Description=concert-database crawl cycle
+Description=banded-data crawl cycle
 Wants=network-online.target
 After=network-online.target
 
 [Service]
 Type=oneshot
-WorkingDirectory=%h/concert-database
-EnvironmentFile=%h/concert-database/.env
-ExecStart=%h/concert-database/.venv/bin/concertdb run
+WorkingDirectory=%h/banded-data
+EnvironmentFile=%h/banded-data/.env
+ExecStart=%h/banded-data/.venv/bin/concertdb run
 Nice=10
 TimeoutStartSec=6h
