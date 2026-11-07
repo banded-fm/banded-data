@@ -260,9 +260,17 @@ def cmd_status(args):
 
 
 def cmd_export(args):
-    rows = export.opened_for(_conn(args), min_conf=args.min_conf, known_only=args.musicbrainz_only)
-    export.write_csv(rows, args.out)
-    print(f"wrote {len(rows):,} opened_for edges to {args.out}")
+    if args.what == "shows":
+        out = args.out or "data/export/shows.csv"
+        rows = export.shows(_conn(args), min_conf=args.min_conf or 0.0, known_only=args.musicbrainz_only)
+        export.write_csv(rows, out, export.SHOWS_COLUMNS)
+        print(f"wrote {len(rows):,} acts on {len({r['show_id'] for r in rows}):,} shows to {out}")
+        return
+    out = args.out or "data/export/opened_for.csv"
+    rows = export.opened_for(_conn(args), min_conf=0.4 if args.min_conf is None else args.min_conf,
+                             known_only=args.musicbrainz_only)
+    export.write_csv(rows, out)
+    print(f"wrote {len(rows):,} opened_for edges to {out}")
 
 
 def cmd_backup(args, conn=None):
@@ -495,9 +503,12 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--no-upload", action="store_true", help="don't upload it to R2 (dashboards/index.html)")
     s.set_defaults(fn=cmd_dashboard)
 
-    s = sub.add_parser("export", help="write opened_for edges for Banded")
-    s.add_argument("--out", default="data/export/opened_for.csv")
-    s.add_argument("--min-conf", type=float, default=0.4)
+    s = sub.add_parser("export", help="write data for Banded: opened_for edges (the default), or shows"
+                       " (every act on every show, with the venue's location)")
+    s.add_argument("what", nargs="?", choices=["opened-for", "shows"], default="opened-for")
+    s.add_argument("--out", help="default: data/export/opened_for.csv or data/export/shows.csv")
+    s.add_argument("--min-conf", type=float, help="lowest role confidence: default 0.4 for opened-for; 0 for shows,"
+                   " which includes acts whose role is unknown (most setlist.fm nights)")
     s.add_argument("--musicbrainz-only", action="store_true",
                    help="only acts matched to MusicBrainz (no unmatched 'name:' artists)")
     s.set_defaults(fn=cmd_export)

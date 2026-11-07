@@ -464,6 +464,8 @@ tour offline from captured search answers and the promoter's tour page.
    term; a second model to confirm roles on the fetched pages, cached by
    (page hash, prompt version), with a hard monthly $ cap from `usage`.
 5. **Bandsintown** past events, if an `app_id` is granted.
-6. **Banded import**: load `opened_for.csv` into the graph build. The
-   ledger's saved Pollstar events could also serve Banded's concert
-   recommendations, so it calls Pollstar less.
+6. **Pollstar events for Banded**: the ledger's saved Pollstar events could
+   serve Banded's concert recommendations, so it calls Pollstar less.
+   (opened_for edges already reach Banded: its `scripts/add_concertdb_edges.py`
+   reads the ledger read-only after each graph build, and
+   `scripts/find_scenes.py` reads `concertdb export shows`.)

@@ -116,6 +116,8 @@ concertdb dashboard                   # data/dashboard.html (also written after 
 concertdb shows "Flat Worms"          # what we know about an artist
 deploy/review.sh                      # flagged act names from `gemini`: list, then keep / rename / mbid / delete each
 concertdb export --musicbrainz-only   # data/export/opened_for.csv for Banded
+concertdb export shows --musicbrainz-only   # data/export/shows.csv: every act on every show,
+                                            # with the venue's location (Banded's scripts/find_scenes.py)
 ```
 
 On the always-on machine, three daily scheduled jobs run side by side and
