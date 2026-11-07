@@ -7,8 +7,8 @@ import sys
 from datetime import date
 from pathlib import Path
 
-from . import (backup, dashboard, db, export, ledger, misses, user_requested, musicbrainz, review, runs, seed, smoke,
-               state, status)
+from . import (backup, dashboard, db, export, ledger, misses, user_requested, musicbrainz, review, runs, scenes, seed,
+               smoke, state, status)
 from .http import Fetcher
 from .normalize import norm
 from .sources import gemini, jsonld, pollstar, setlistfm
@@ -265,6 +265,38 @@ def cmd_export(args):
     print(f"wrote {len(rows):,} opened_for edges to {args.out}")
 
 
+def cmd_scenes(args):
+    """On demand: a city's music scenes, written as JSON (concertdb/scenes.py)."""
+    conn = _conn(args)
+    out = Path(args.out) if args.out else scenes.default_path(_data_dir(args), args.city)
+    graph_path, downloaded = args.graph, None
+    if str(graph_path).startswith(("http://", "https://")):
+        print(f"downloading {graph_path}")
+        graph_path = downloaded = seed._download(str(graph_path))
+    graph, tmp = seed._open_graph(Path(graph_path))
+
+    def step() -> dict:
+        result = scenes.find(conn, graph, args.city, radius_km=args.radius_km, extra_areas=tuple(args.area),
+                             min_size=args.min_size, resolution=args.resolution)
+        scenes.write(result, out)
+        return {"city": args.city, "scenes": len(result["scenes"]), "in_scenes": result["in_scenes"],
+                "local_artists": result["local_artists"], "out": str(out), "_result": result}
+    try:
+        stats = runs.record(conn, "scenes", step)
+    finally:
+        graph.close()
+        for p in (tmp, downloaded):
+            if p:
+                Path(p).unlink(missing_ok=True)
+    result = stats["_result"]
+    print(f"{len(result['scenes'])} scenes, {result['in_scenes']:,} of {result['local_artists']:,} local artists"
+          f" ({result['linked_artists']:,} linked); wrote {out}")
+    for s in result["scenes"]:
+        loc = s["location"]
+        print(f"  {s['name']:<40} {s['size']:>4} artists  {loc['place']} ({loc['source']})"
+              f"  {', '.join(a['name'] for a in s['artists'][:5])}")
+
+
 def cmd_backup(args, conn=None):
     conn = conn or _conn(args)
 
@@ -506,6 +538,20 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--graph", default=seed.GRAPH_URL)
     s.add_argument("--page-url", help="also test one venue calendar / event page")
     s.set_defaults(fn=cmd_smoke_test)
+
+    s = sub.add_parser("scenes", help="find a city's music scenes and place them on the map (on demand, not"
+                       " part of `run`; needs: .venv/bin/pip install -e '.[scenes]')")
+    s.add_argument("--city", required=True, help="as venues name it, e.g. 'Los Angeles'")
+    s.add_argument("--graph", default=seed.GRAPH_URL, help="path or URL to Banded's graph.db(.gz)")
+    s.add_argument("--radius-km", type=float, default=scenes.RADIUS_KM,
+                   help=f"venues this close to the city's centre count (default {scenes.RADIUS_KM})")
+    s.add_argument("--area", action="append", default=[],
+                   help="a MusicBrainz area that also counts as the city, e.g. 'Orange County' (repeatable)")
+    s.add_argument("--min-size", type=int, default=scenes.MIN_SIZE, help="smallest scene, in artists")
+    s.add_argument("--resolution", type=float, default=scenes.RESOLUTION,
+                   help=f"higher splits into more, smaller scenes (default {scenes.RESOLUTION})")
+    s.add_argument("--out", help="default: data/scenes/<city>.json")
+    s.set_defaults(fn=cmd_scenes)
 
     sub.add_parser("backup", help="snapshot (and upload to R2 if configured)").set_defaults(fn=cmd_backup)
     sub.add_parser("restore", help="restore the newest R2 snapshot").set_defaults(fn=cmd_restore)

@@ -127,6 +127,26 @@ Gemini's free quota resets at midnight Pacific. Windows Task Scheduler via
 WSL (`deploy/windows-task.ps1`) or systemd timers on Linux (`deploy/*.timer`).
 See docs/HOSTING.md.
 
+## Music scenes
+
+On demand (not part of `run`): group a city's artists into the scenes they
+play and record in, each with a suggested name and a place on the map.
+
+```bash
+.venv/bin/pip install -e '.[scenes]'             # networkx, once
+.venv/bin/concertdb scenes --city "Los Angeles"  # downloads Banded's graph.db.gz
+# --graph PATH (a local graph.db(.gz)), --area "Orange County" (repeatable),
+# --radius-km 60, --min-size 8, --resolution 1.5, --out FILE
+```
+
+It writes `data/scenes/<city>.json` and prints one line per scene, e.g.
+"Los Angeles punk, 171 artists, Los Angeles (shared bills): Adolescents,
+T.S.O.L., The Vandals, ...". Each scene has a name, a location (lat/lon, the
+venue and place it is centred on, and what that is based on), its genres and
+home places, and its artists. Not every artist is in a scene: one loosely tied
+to a group (an actor with one song credit) is left out. How it works:
+"Music scenes" in docs/ARCHITECTURE.md.
+
 ## Dashboard
 
 `data/dashboard.html` is one self-contained page (open it in a browser; no

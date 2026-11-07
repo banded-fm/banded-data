@@ -174,6 +174,46 @@ headline numbers in `metric_snapshots` for trends and 24 h / 7 day deltas.
 embedded as JSON; the page draws its own charts (inline SVG, no libraries).
 A dashboard error is printed but never fails a run.
 
+## Music scenes (`concertdb/scenes.py`)
+
+`concertdb scenes --city X` is run by hand when needed. It reads Banded's
+graph.db (artists' MusicBrainz areas and genres, and the links between them)
+and this ledger's shows, and writes `data/scenes/<city>.json`. The ledger is
+only read; the run is recorded in `runs` as step `scenes`.
+
+1. **The city** is its venues: those in the named city give the centre, and
+   every venue within the radius (60 km) counts. The venues' city names
+   ("Long Beach", "Pasadena") are the places the city is made of.
+2. **Local artists**: a MusicBrainz area that is one of those places (or an
+   `--area` such as "Orange County", which no venue is in), or at least 3
+   shows here making up at least 60% of the artist's shows. Areas are names
+   only in graph.db, so a same-named place inside the radius counts (a
+   "Glendale" artist from Arizona would count for LA).
+3. **Links** between local artists: band membership 3, support musician or
+   opening slot 2, producer 1, shared song credits 1 each (up to 3), bills
+   shared at a venue here 1 each (up to 3).
+4. **Groups**: Louvain communities (networkx), resolution 1.5, fixed seed.
+   Above 1, a network that is all one group gets split up; that never happens
+   with a whole city, but a tiny test network needs `--resolution 1`.
+5. **Members**: an artist stays only if at least half its link weight here is
+   inside its group and that weight is at least 3. Groups under 8 artists are
+   dropped. In LA (November 2026): 3,881 local artists, 2,227 linked, 1,435 in
+   29 scenes.
+6. **Name** (a suggestion): the place plus the most distinctive genre held by
+   at least 12% of the group (share times over-representation against the
+   city, capped at 3x), skipping one a bigger scene there took. The place is a
+   narrower one (e.g. "Hollywood") when at least half the group's artists with
+   a narrower area come from it. Generic genres give weak names ("Los Angeles
+   rock"); obvious misses ("trap metal" for game composers) need a human.
+7. **Location**: the venue nearest all the others (weighted by shows) among
+   those where the group's artists shared bills (3+ shows), or else played
+   (5+ shows); else the narrower place most of them come from (30%+); else the
+   city centre. `spread_km` is the median distance of those shows from it.
+
+Limits: no sense of era yet (MusicBrainz begin dates would split the 1966
+Sunset Strip from 1979 punk); concerts add few links so far (in LA most shows
+list one act with a MusicBrainz ID); names need review.
+
 ## Search misses from Banded (`concertdb/misses.py`)
 
 Banded's graph is built from the artists with concerts here, so an
