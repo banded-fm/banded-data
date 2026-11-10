@@ -36,7 +36,7 @@ def _open_graph(path: Path) -> tuple[sqlite3.Connection, Path | None]:
     return sqlite3.connect(str(tmp)), tmp
 
 
-GRAPH_URL = "https://raw.githubusercontent.com/rahuljaisimha/banded/main/public/graph.db.gz"
+GRAPH_URL = "https://raw.githubusercontent.com/banded-fm/banded/main/public/graph.db.gz"
 
 
 def _download(url: str) -> Path:

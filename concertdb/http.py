@@ -15,7 +15,7 @@ from pathlib import Path
 
 import requests
 
-USER_AGENT = "banded-data/0.1 (+https://github.com/rahuljaisimha/banded-data)"
+USER_AGENT = "banded-data/0.1 (+https://github.com/banded-fm/banded-data)"
 
 
 @dataclass

@@ -72,7 +72,7 @@ Windows Task Scheduler.
    much slower for SQLite):
    ```bash
    sudo apt update && sudo apt install -y python3-venv git
-   cd ~ && git clone https://github.com/rahuljaisimha/banded-data && cd banded-data
+   cd ~ && git clone https://github.com/banded-fm/banded-data && cd banded-data
    python3 -m venv .venv && .venv/bin/pip install -e '.[r2]'
    cp .env.example .env && chmod 600 .env && nano .env    # paste the secrets
    ```
