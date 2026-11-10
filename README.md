@@ -1,7 +1,7 @@
 # banded-data
 
 A ledger of concert bills: who played which show, and who opened for whom.
-It feeds `opened_for` edges into [Banded](https://github.com/rahuljaisimha/banded),
+It feeds `opened_for` edges into [Banded](https://github.com/banded-fm/banded),
 where they connect bands that share members or scenes (Flat Worms opening for
 Iguana Death Cult at Zebulon links them to Osees through Flat Worms' bassist).
 
@@ -26,7 +26,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for how it works and
 ## Setup
 
 ```bash
-git clone https://github.com/rahuljaisimha/banded-data && cd banded-data
+git clone https://github.com/banded-fm/banded-data && cd banded-data
 python3 -m venv .venv
 .venv/bin/pip install -e '.[r2,dev]'
 cp .env.example .env        # add your setlist.fm key and R2 credentials
